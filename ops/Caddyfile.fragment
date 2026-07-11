@@ -1,0 +1,5 @@
+# Bloco para publicar o portal HomoSapiens via container Docker `homosapiens-site`.
+# Requer DNS de homosapiens.id e www.homosapiens.id apontando para a VPS.
+homosapiens.id, www.homosapiens.id {
+    reverse_proxy homosapiens-site:80
+}
