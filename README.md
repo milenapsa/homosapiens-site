@@ -1,17 +1,22 @@
 # homosapiens-site
 
-Portal público do ecossistema HomoSapiens/homosapiens.id.
+Portal público do ecossistema HomoSapiens / homosapiens.id.
 
-Fonte Git para editar o portal institucional e publicar de forma controlada na VPS.
+Este repositório é a fonte única para editar o portal institucional e publicar na VPS.
 
 ## Estrutura
 
 - `site/` — arquivos públicos do portal.
-- `ops/install_homosapiens_site_bridge_v01.sh` — instalador/publicador A4 assistido para a VPS.
-- `ops/Caddyfile.fragment` — bloco de Caddy para `homosapiens.id` e `www.homosapiens.id`.
-- `docs/` — inventário operacional e próximos passos.
+- `ops/publish_homosapiens_site_vps_v03.sh` — publicador idempotente na VPS.
+- `ops/rollback_caddy_homosapiens_site_v01.sh` — rollback do Caddy usando backup persistente.
+- `docs/` — inventário e evidência operacional.
 
-## Regra operacional
+## Produção
 
-Preparar não é publicar. Publicar exige execução do instalador na VPS, teste e evidência técnica.
-Não guardar senhas, tokens, certificados ou chaves neste repositório.
+- Domínio: `https://homosapiens.id`
+- Alias: `https://www.homosapiens.id`
+- VPS: `76.13.226.21`
+- Container: `homosapiens-site`
+- Proxy: `media-studio-caddy`
+
+Publicação real é operação A4 e deve gerar evidência técnica.
