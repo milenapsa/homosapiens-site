@@ -44,12 +44,7 @@ d=json.load(open('/tmp/caddy.inspect.json'))[0]
 for name in d.get('NetworkSettings',{}).get('Networks',{}).keys():
     print(name)
 PY
-
-if [ ! -s /tmp/caddy.networks ]; then
-  echo "ERROR: no Caddy networks found"
-  exit 2
-fi
-
+test -s /tmp/caddy.networks
 while IFS= read -r net; do
   [ -n "$net" ] || continue
   echo "CONNECT_NETWORK=$net"
@@ -62,7 +57,7 @@ docker cp "$CADDY_CONTAINER:/etc/caddy/Caddyfile" "$BACKUP_FILE"
 cp "$BACKUP_FILE" /tmp/Caddyfile.new
 
 python3 - <<'PY'
-from pathlib import Path
+from pathib import Path
 p = Path('/tmp/Caddyfile.new')
 text = p.read_text(encoding='utf-8', errors='ignore')
 begin = '# BEGIN HOMOSAPIENS_SITE'
@@ -86,24 +81,20 @@ PY
 
 docker cp /tmp/Caddyfile.new "$CADDY_CONTAINER:/etc/caddy/Caddyfile"
 docker exec "$CADDY_CONTAINER" caddy fmt --overwrite /etc/caddy/Caddyfile
-docker exec "$CADDY_CONTAINER" caddy validate --config /etc/caddy/Caddyfile
-docker exec "$CADDY_CONTAINER" caddy reload --config /etc/caddyfile
+docker exec "$CADDY_CONTAINER" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker exec "$CADDY_CONTAINER" caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
 
 echo "7) Tests"
 FIRST_NET="$(head -n 1 /tmp/caddy.networks)"
-
 echo "TEST_DIRECT_SITE"
 docker run --rm --network "$FIRST_NET" curlimages/curl:8.11.1 -fsS "http://$SITE_CONTAINER/" | head -c 220
 echo
-
 echo "TEST_CADDY_HTTP"
-docker run --rm --network "$FIRST_NET" curlimages/curl:8.11.1 -sS -o /tmp/out -w 'HTTP=%{http_code} REDIRECT=%{redirect_url} SIZE=%{size_download}\n' -H 'Host: homosapiens.id' "http://$CADDY_CONTAINER/" || true
-
+docker run --rm --network "$FIRST_NET" curlimages/curl:8.11.1 -sS -o /dev/null -w 'HTTP=%{http_code} REDIRECT=%{redirect_url} SIZE=%{size_download}\n' -H 'Host: homosapiens.id' "http://$CADDY_CONTAINER/" || true
 echo "TEST_CADDY_HTTPS"
-docker run --rm --network "$FIRST_NET" curlimages/curl:8.11.1 -ksS --connect-to "homosapiens.id:443:$CADDY_CONTAINER:443" -o /tmp/out2 -w 'HTTPS=%{http_code} REDIRECT=%{redirect_url} SIZE=%{size_download}\n' https://homosapiens.id/ || true
+docker run --rm --network "$FIRST_NET" curlimages/curl:8.11.1 -ksS --connect-to "homosapiens.id:443:$CADDY_CONTAINER:443" -o /dev/null -w 'HTTPS=%{http_code} REDIRECT=%{redirect_url} SIZE=%{size_download}\n' https://homosapiens.id/ || true
 
 echo "8) Containers"
 docker ps --format 'CONTAINER={{.Names}} STATUS={{.Status}} PORTS={{.Ports}}' | grep -E 'homosapiens-site|media-studio-caddy' || true
-
 echo "BACKUP_FILE=$BACKUP_FILE"
 echo "HOMOSAPIENS_SITE_PUBLISH_V03_OK"
