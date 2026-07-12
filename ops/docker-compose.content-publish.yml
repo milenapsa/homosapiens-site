@@ -1,0 +1,32 @@
+services:
+  publish:
+    image: docker:27-cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - homosapiens_site_repair_backups:/backups
+    command:
+      - sh
+      - -lc
+      - |
+        set -eu
+        apk add --no-cache curl tar gzip
+        STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+        mkdir -p /tmp/site/assets /tmp/current
+        docker cp homosapiens-site:/usr/share/nginx/html/. /tmp/current/ || true
+        tar -czf /backups/homosapiens-before-$STAMP.tar.gz -C /tmp/current .
+        curl -fsSL https://raw.githubusercontent.com/milenapsa/homosapiens-site/main/site/index.html -o /tmp/site/index.html
+        curl -fsSL https://raw.githubusercontent.com/milenapsa/homosapiens-site/main/site/assets/app.js -o /tmp/site/assets/app.js
+        curl -fsSL https://raw.githubusercontent.com/milenapsa/homosapiens-site/main/site/assets/style.css -o /tmp/site/assets/style.css
+        grep -q 'assets/app.js' /tmp/site/index.html
+        grep -q 'APPLIANCES' /tmp/site/assets/app.js
+        docker exec homosapiens-site sh -lc 'rm -rf /usr/share/nginx/html/* /usr/share/nginx/html/.[!.]* /usr/share/nginx/html/..?* 2>/dev/null || true'
+        docker cp /tmp/site/. homosapiens-site:/usr/share/nginx/html/
+        docker exec homosapiens-site sh -lc 'chmod -R a+rX /usr/share/nginx/html; nginx -t; wget -T 8 -qO- http://127.0.0.1/ > /tmp/home.html; grep -q "assets/app.js" /tmp/home.html; wc -c /tmp/home.html'
+        NET=$(docker inspect media-studio-caddy --format '{{range $k,$v := .NetworkSettings.Networks}}{{println $k}}{{end}}' | head -n1)
+        docker run --rm --network "$NET" curlimages/curl:8.11.1 -m 15 -ksS --connect-to homosapiens.id:443:media-studio-caddy:443 https://homosapiens.id/ -o /tmp/public.html
+        grep -q 'assets/app.js' /tmp/public.html
+        echo BACKUP=/backups/homosapiens-before-$STAMP.tar.gz
+        echo HOMOSAPIENS_CONTENT_PUBLISH_OK
+        sleep 86400
+volumes:
+  homosapiens_site_repair_backups:
