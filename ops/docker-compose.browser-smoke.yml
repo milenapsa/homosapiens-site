@@ -1,0 +1,88 @@
+services:
+  smoke:
+    image: ghcr.io/puppeteer/puppeteer:24.15.0
+    cap_add:
+      - SYS_ADMIN
+    command:
+      - sh
+      - -lc
+      - |
+        set -eu
+        cat > /tmp/smoke.js <<'JS'
+        const puppeteer = require('puppeteer');
+
+        (async () => {
+          const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+          });
+          const page = await browser.newPage();
+          const consoleErrors = [];
+          const pageErrors = [];
+          page.on('console', msg => {
+            if (msg.type() === 'error') consoleErrors.push(msg.text());
+          });
+          page.on('pageerror', err => pageErrors.push(String(err)));
+
+          const response = await page.goto('https://homosapiens.id/', {
+            waitUntil: 'networkidle2',
+            timeout: 45000
+          });
+
+          console.log(`HTTP_STATUS=${response ? response.status() : 'NONE'}`);
+          console.log(`TITLE=${await page.title()}`);
+
+          await page.waitForSelector('#demo', {timeout: 15000});
+          const h1 = await page.$eval('h1', el => el.textContent.trim());
+          console.log(`H1=${h1}`);
+
+          const applianceCount = await page.$$eval('#appliances input[type=checkbox]', els => els.length);
+          const utensilCount = await page.$$eval('#utensils input[type=checkbox]', els => els.length);
+          console.log(`APPLIANCE_OPTIONS=${applianceCount}`);
+          console.log(`UTENSIL_OPTIONS=${utensilCount}`);
+
+          await page.click('#demo');
+          await page.waitForFunction(() => document.querySelectorAll('#pantry .chip').length >= 4, {timeout: 10000});
+          console.log(`PANTRY_CHIPS=${await page.$$eval('#pantry .chip', els => els.length)}`);
+
+          await page.click('#recommend');
+          await page.waitForFunction(() => document.querySelectorAll('#recipes .recipe').length > 0, {timeout: 10000});
+          const recipeCount = await page.$$eval('#recipes .recipe', els => els.length);
+          const guideCount = await page.$$eval('#recipes .guide', els => els.length);
+          console.log(`RECIPE_CARDS=${recipeCount}`);
+          console.log(`GUIDE_BLOCKS=${guideCount}`);
+
+          const firstPlan = await page.$('#recipes button[data-a]');
+          if (!firstPlan) throw new Error('Botao Planejar nao encontrado');
+          await firstPlan.click();
+          await page.waitForFunction(() => document.querySelectorAll('#plan .row').length > 0, {timeout: 10000});
+          console.log(`PLAN_ROWS=${await page.$$eval('#plan .row', els => els.length)}`);
+
+          const storage = await page.evaluate(() => ({
+            appliances: JSON.parse(localStorage.getItem('hsAppliances') || '[]').length,
+            utensils: JSON.parse(localStorage.getItem('hsUtensils') || '[]').length,
+            pantry: JSON.parse(localStorage.getItem('hsPantry') || '[]').length,
+            plan: JSON.parse(localStorage.getItem('hsPlan') || '[]').length
+          }));
+          console.log(`LOCAL_STORAGE=${JSON.stringify(storage)}`);
+
+          console.log(`CONSOLE_ERRORS=${consoleErrors.length}`);
+          if (consoleErrors.length) console.log(`CONSOLE_ERROR_TEXT=${consoleErrors.join(' | ')}`);
+          console.log(`PAGE_ERRORS=${pageErrors.length}`);
+          if (pageErrors.length) console.log(`PAGE_ERROR_TEXT=${pageErrors.join(' | ')}`);
+
+          if (!response || response.status() !== 200) throw new Error('HTTP publico diferente de 200');
+          if (!h1.includes('Cozinhe melhor')) throw new Error('Titulo principal inesperado');
+          if (applianceCount < 5 || utensilCount < 5) throw new Error('Opcoes de equipamentos incompletas');
+          if (recipeCount < 1 || guideCount < 1) throw new Error('Recomendacoes guiadas ausentes');
+          if (consoleErrors.length || pageErrors.length) throw new Error('Erros JavaScript detectados');
+
+          console.log('HOMOSAPIENS_BROWSER_SMOKE_OK');
+          await browser.close();
+        })().catch(err => {
+          console.error(`SMOKE_ERROR=${err.stack || err}`);
+          process.exit(1);
+        });
+        JS
+        node /tmp/smoke.js
+        sleep 86400
