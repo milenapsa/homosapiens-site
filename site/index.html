@@ -1,1 +1,45 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HomoSapiens — Culinária Inteligente</title><link rel="stylesheet" href="/assets/style.css"></head><body><main id="app"></main><script src="/assets/app.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HomoSapiens APIs</title>
+  <meta name="description" content="APIs confiáveis para busca, memória, dados jurídicos e automação inteligente.">
+  <link rel="stylesheet" href="assets/portal.css">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/">HomoSapiens<span>APIs</span></a>
+  <nav><a href="#catalogo">APIs</a><a href="#sandbox">Sandbox</a><a href="#docs">Docs</a><a href="/admin.html">Admin</a></nav>
+</header>
+<main>
+<section class="hero">
+  <div class="eyebrow">PLATAFORMA DE INTELIGÊNCIA APLICADA</div>
+  <h1>APIs que transformam dados complexos em decisões claras.</h1>
+  <p>Busca jurídica, memória, conectores públicos e infraestrutura de IA com rastreabilidade, segurança e integração simples.</p>
+  <div class="actions"><a class="primary" href="#catalogo">Explorar APIs</a><a class="secondary" href="#sandbox">Testar sandbox</a></div>
+  <div class="status"><span></span> Plataforma em evolução controlada</div>
+</section>
+<section id="catalogo" class="section">
+  <div class="section-head"><div><small>CATÁLOGO</small><h2>Produtos disponíveis</h2></div><p>Comece pelo sandbox e evolua para um token de produção.</p></div>
+  <div id="api-grid" class="grid"></div>
+</section>
+<section id="sandbox" class="section sandbox">
+  <div class="sandbox-copy"><small>SANDBOX</small><h2>Teste antes de integrar.</h2><p>Experimente o formato das respostas sem acessar dados privados ou sistemas autenticados.</p></div>
+  <form id="sandbox-form" class="console">
+    <label>API<select id="sandbox-product"><option value="lex-juridica">Lex Jurídica</option><option value="lex-search-core">Lex Search Core</option><option value="datajud-connector">DataJud Connector</option></select></label>
+    <label>Operação<input id="sandbox-operation" value="search"></label>
+    <label>Consulta<textarea id="sandbox-query" placeholder="Digite uma consulta de demonstração"></textarea></label>
+    <button class="primary" type="submit">Executar teste</button>
+    <pre id="sandbox-output">A resposta aparecerá aqui.</pre>
+  </form>
+</section>
+<section id="docs" class="section docs">
+  <small>INTEGRAÇÃO</small><h2>Do primeiro request à produção.</h2>
+  <div class="steps"><article><b>01</b><h3>Explore</h3><p>Veja endpoints, schemas e exemplos.</p></article><article><b>02</b><h3>Teste</h3><p>Use o sandbox sem credenciais produtivas.</p></article><article><b>03</b><h3>Integre</h3><p>Receba um token com escopos e limites próprios.</p></article></div>
+</section>
+</main>
+<footer><div class="brand">HomoSapiens<span>APIs</span></div><p>Infraestrutura tecnológica para inteligência aplicada.</p></footer>
+<script src="assets/portal.js"></script>
+</body>
+</html>
