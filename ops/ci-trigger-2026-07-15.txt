@@ -1,0 +1,5 @@
+CI trigger after repository Actions permissions were enabled on 2026-07-15.
+
+Purpose: rerun exact-HEAD validation and evidence workflows.
+Runtime impact: none.
+Publication impact: none.
